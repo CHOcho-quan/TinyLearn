@@ -14,6 +14,38 @@ class DataSet:
         self.filepath = filepath
         self.paths = glob.glob(pathname=filepath+"FDDB-fold-**-ellipseList.txt")
 
+    def padding(self, image, output, left_padding, right_padding, up_padding, down_padding):
+        if left_padding < 0:
+            for k in range(-left_padding):
+                output = np.insert(output, 0, output[0, :], axis=0)
+        if right_padding < image.shape[1]:
+            for k in range(-right_padding):
+                output = np.insert(output, -1, output[-1, :], axis=0)
+        if up_padding < 0:
+            for k in range(-up_padding):
+                output = np.insert(output, 0, output[:, 0], axis=1)
+        if down_padding < image.shape[0]:
+            for k in range(-down_padding):
+                output = np.insert(output, -1, output[:, -1], axis=1)
+
+        return output
+
+    def paddingNormal(self, image, output, center_x, center_y, height, width, type=0):
+        if center_x - width / 2 < 0:
+            for k in range(int(width / 2 - center_x)):
+                output = np.insert(output, 0, output[0, :], axis=0)
+        if center_x + width / 2 > image.shape[1]:
+            for k in range(int(center_x + width / 2 - image.shape[1])):
+                output = np.insert(output, -1, output[-1, :], axis=0)
+        if center_y - height / 2 < 0:
+            for k in range(int(height / 2 - center_y)):
+                output = np.insert(output, 0, output[:, 0], axis=1)
+        if center_y + height / 2 > image.shape[0]:
+            for k in range(int(center_y + height / 2 - image.shape[0])):
+                output = np.insert(output, -1, output[:, -1], axis=1)
+
+        return output
+
     def generatePositive(self, dataPath, outPath):
         """
         Generating positive samples by adding the correct rectangle to the picutre
@@ -27,9 +59,10 @@ class DataSet:
             file = open(self.paths[i], 'r')
             # read the image file path
             line = file.readline()
+            name = line[:-1]
             while (line):
                 image = cv2.imread(dataPath + line[:-1] + ".jpg")
-                print("Processing " + dataPath + line[:-1] + ".jpg")
+                print("Generating Positive samples: " + dataPath + line[:-1] + ".jpg")
 
                 # read how many faces are there in the picuture
                 faces = int(file.readline())
@@ -44,28 +77,110 @@ class DataSet:
                     center_x = float(center_x)
                     center_y = float(center_y)
 
-                    image = cv2.rectangle(image, pt1=(int(center_x - width / 2), int(center_y - height / 2)), pt2=(int(center_x + width / 2), int(center_y + height / 2)), color=(0,0,255))
+                    # image = cv2.rectangle(image, pt1=(int(center_x - width / 2), int(center_y - height / 2)), pt2=(int(center_x + width / 2), int(center_y + height / 2)), color=(0,0,255))
+
                     # Now deal with the situation when the rectangle is outside the image
                     output = image[max(int(center_y - height / 2), 0):min(int(center_y + height / 2), image.shape[0]),
                                    max(0, int(center_x - width / 2)):min(int(center_x + width / 2), image.shape[1])]
-                    if center_x - width / 2 < 0:
-                        for k in range(int(width / 2 - center_x)):
-                            output = np.insert(output, 0, output[0, :], axis=0)
-                    if center_x + width / 2 > image.shape[1]:
-                        for k in range(int(center_x + width / 2 - image.shape[1])):
-                            output = np.insert(output, -1, output[-1, :], axis=0)
-                    if center_y - height / 2 < 0:
-                        for k in range(int(height / 2 - center_y)):
-                            output = np.insert(output, 0, output[:, 0], axis=1)
-                    if center_y + height / 2 > image.shape[0]:
-                        for k in range(int(center_y + height / 2 - image.shape[0])):
-                            output = np.insert(output, -1, output[:, -1], axis=1)
-                    cv2.imshow("output", output)
-                    cv2.waitKey(0)
-                # cv2.imshow("output", image)
-                # cv2.waitKey(0)
+                    output = self.paddingNormal(image, output, center_x, center_y, height, width)
+                    # cv2.imshow("output", output)
+                    # cv2.waitKey(0)
+
+                    # Now the output is the faces.
+                    # print(outPath + name.split('/').join('') + str(j) + ".jpg")
+                    cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + ".jpg", cv2.resize(output, dsize=(96, 96)))
+
                 line = file.readline()
+                name = line[:-1]
+
+    def generateNegative(self, dataPath, outPath):
+        """
+        Generating negative samples by adding the correct rectangle to the picutre
+        Negative samples are generated either by:
+        1.Original picutures without getting the face out
+        2.Getting the bounding boxes moved around the face 1/3 padding
+
+        """
+        print(self.paths)
+        for i in range(4):
+            file = open(self.paths[i], 'r')
+            # read the image file path
+            line = file.readline()
+            name = line[:-1]
+            while (line):
+                image = cv2.imread(dataPath + line[:-1] + ".jpg")
+                print("Generating Negative samples: " + dataPath + line[:-1] + ".jpg")
+
+                # read how many faces are there in the picuture
+                faces = int(file.readline())
+                for j in range(faces):
+                    line = file.readline()
+                    line = line.split(' ')
+                    long, short, angle, center_x, center_y = line[:5]
+
+                    # Calculating the points and getting the rectangle on the image
+                    width = float(short) * 8 / 3
+                    height = float(long) * 8 / 3
+                    center_x = float(center_x)
+                    center_y = float(center_y)
+
+                    # image = cv2.rectangle(image, pt1=(int(center_x - width / 2), int(center_y - height / 2)), pt2=(int(center_x + width / 2), int(center_y + height / 2)), color=(0,0,255))
+
+                    # Now deal with the situation when the rectangle is outside the image
+                    # Every single image we generate 9 negative samples
+                    cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + "_" + str(0) + ".jpg", cv2.resize(image, (96, 96)))
+                    # Padding upward 1/3
+                    output1 = image[max(int(center_y - height * 5 / 6), 0):min(int(center_y + height / 6), image.shape[0]),
+                                    max(0, int(center_x - width / 2)):min(int(center_x + width / 2), image.shape[1])]
+                    output1 = self.padding(image, output1, left_padding=int(center_x - width / 2), right_padding=int(center_x + width / 2), up_padding=int(center_y - height * 5 / 6), down_padding=int(center_y + height / 6))
+                    cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + "_" + str(1) + ".jpg", cv2.resize(output1, (96, 96)))
+
+                    # Padding leftward 1/3
+                    output2 = image[max(int(center_y - height / 2), 0):min(int(center_y + height / 2), image.shape[0]),
+                                    max(0, int(center_x - width * 5 / 6)):min(int(center_x + width / 6), image.shape[1])]
+                    output2 = self.padding(image, output2, left_padding=int(center_x - width * 5 / 6), right_padding=int(center_x + width / 6), up_padding=int(center_y - height / 2), down_padding=int(center_y + height / 2))
+                    cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + "_" + str(2) + ".jpg", cv2.resize(output2, (96, 96)))
+
+                    # Padding downward 1/3
+                    output3 = image[max(int(center_y - height / 6), 0):min(int(center_y + height * 5 / 6), image.shape[0]),
+                                    max(0, int(center_x - width / 2)):min(int(center_x + width / 2), image.shape[1])]
+                    output3 = self.padding(image, output3, left_padding=int(center_x - width / 2), right_padding=int(center_x + width / 2), up_padding=int(center_y - height / 6), down_padding=int(center_y + height * 5 / 6))
+                    cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + "_" + str(3) + ".jpg", cv2.resize(output3, (96, 96)))
+
+                    # Padding rightward 1/3
+                    output4 = image[max(int(center_y - height / 2), 0):min(int(center_y + height / 2), image.shape[0]),
+                                    max(0, int(center_x - width / 6), 0):min(int(center_x + width * 5 / 6), image.shape[1])]
+                    output4 = self.padding(image, output4, left_padding=int(center_x - width / 6), right_padding=int(center_x + width * 5 / 6), up_padding=int(center_y - height / 2), down_padding=int(center_y + height / 2))
+                    cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + "_" + str(4) + ".jpg", cv2.resize(output4, (96, 96)))
+
+                    # Padding upward & leftward
+                    output5 = image[max(int(center_y - height * 5 / 6), 0):min(int(center_y + height / 6), image.shape[0]),
+                                    max(0, int(center_x - width * 5 / 6)):min(int(center_x + width / 6), image.shape[1])]
+                    output5 = self.padding(image, output5, left_padding=int(center_x - width * 5 / 6), right_padding=int(center_x + width / 6), up_padding=int(center_y - height * 5 / 6), down_padding=int(center_y + height / 6))
+                    cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + "_" + str(5) + ".jpg", cv2.resize(output5, (96, 96)))
+
+                    # Padding upward & rightward
+                    output6 = image[max(int(center_y - height * 5 / 6), 0):min(int(center_y + height / 6), image.shape[0]),
+                                    max(0, int(center_x - width / 6), 0):min(int(center_x + width * 5 / 6), image.shape[1])]
+                    output6 = self.padding(image, output6, left_padding=int(center_x - width / 6), right_padding=int(center_x + width * 5 / 6), up_padding=int(center_y - height * 5 / 6), down_padding=int(center_y + height / 6))
+                    cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + "_" + str(6) + ".jpg", cv2.resize(output6, (96, 96)))
+
+                    # Padding downward & leftward
+                    output7 = image[max(int(center_y - height / 6), 0):min(int(center_y + height * 5 / 6), image.shape[0]),
+                                    max(0, int(center_x - width * 5 / 6)):min(int(center_x + width / 6), image.shape[1])]
+                    output7 = self.padding(image, output7, left_padding=int(center_x - width * 5 / 6), right_padding=int(center_x + width / 6), up_padding=int(center_y - height / 6), down_padding=int(center_y + height * 5 / 6))
+                    cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + "_" + str(7) + ".jpg", cv2.resize(output7, (96, 96)))
+
+                    # Padding downward & rightward
+                    output8 = image[max(int(center_y - height / 6), 0):min(int(center_y + height * 5 / 6), image.shape[0]),
+                                    max(0, int(center_x - width / 6), 0):min(int(center_x + width * 5 / 6), image.shape[1])]
+                    output8 = self.padding(image, output8, left_padding=int(center_x - width / 6), right_padding=int(center_x + width * 5 / 6), up_padding=int(center_y - height / 6), down_padding=int(center_y + height * 5 / 6))
+                    cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + "_" + str(8) + ".jpg", cv2.resize(output8, (96, 96)))
+
+                line = file.readline()
+                name = line[:-1]
 
 if __name__ == "__main__":
     d = DataSet("./FDDB-folds/")
-    d.generatePositive("./originalPics/", "")
+    # d.generatePositive("./originalPics/", "./train_pos/")
+    d.generateNegative("./originalPics/", "./train_neg/")
