@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import glob
+import pickle
 
 class DataSet:
     """
@@ -14,7 +15,75 @@ class DataSet:
         self.filepath = filepath
         self.paths = glob.glob(pathname=filepath+"FDDB-fold-**-ellipseList.txt")
 
+    def HoG(self, img):
+        """
+        Get the HoG feature from the given image
+        Block size = 2 x 2
+        Cell size = 16 x 16
+        Number of bins = 9
+        Block overlap = 1 x 1
+        Totally 900-d vector
+
+        """
+        hog = cv2.HOGDescriptor("hog.xml")
+        feats = hog.compute(img=img, winStride=None, padding=None, locations=None)
+        return feats
+
+    def extractHoG(self):
+        """
+        Extract the HoG features from the refined pictures and store into data pickle
+        Block size = 2 x 2
+        Cell size = 16 x 16
+        Number of bins = 9
+        Block overlap = 1 x 1
+        Getting a 900-d vector from each image
+
+        """
+        imagesTrainPos = glob.glob(pathname="./refinedPics/train_pos/*.jpg")
+        imagesTrainNeg = glob.glob(pathname="./refinedPics/train_neg/*.jpg")
+        imagesTestPos = glob.glob(pathname="./refinedPics/test_pos/*.jpg")
+        imagesTestNeg = glob.glob(pathname="./refinedPics/test_neg/*.jpg")
+        X_train = []
+        y_train = []
+        X_test = []
+        y_test = []
+        for imgPath in imagesTrainPos:
+            img = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
+            feats = self.HoG(img)
+            X_train.append(feats)
+            y_train.append([1])
+
+        for imgPath in imagesTrainNeg:
+            img = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
+            feats = self.HoG(img)
+            X_train.append(feats)
+            y_train.append([0])
+
+        for imgPath in imagesTestPos:
+            img = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
+            feats = self.HoG(img)
+            X_test.append(feats)
+            y_test.append([1])
+
+        for imgPath in imagesTestNeg:
+            img = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
+            feats = self.HoG(img)
+            X_test.append(feats)
+            y_test.append([0])
+
+        with open('./data/train.pickle', 'wb') as f:
+            pickle.dump((np.array(X_train), np.array(y_train)), f)
+        with open('./data/test.pickle', 'wb') as f:
+            pickle.dump((np.array(X_test), np.array(y_test)), f)
+
+        # with open('data.pickle', 'rb') as f:
+        #     b = pickle.load(f)
+
     def padding(self, image, output, left_padding, right_padding, up_padding, down_padding):
+        """
+        A function to do padding given the padding size of the image
+
+        """
         if left_padding < 0:
             for k in range(-left_padding):
                 output = np.insert(output, 0, output[0, :], axis=0)
@@ -31,6 +100,10 @@ class DataSet:
         return output
 
     def paddingNormal(self, image, output, center_x, center_y, height, width, type=0):
+        """
+        A function to do padding of the normal picutres
+
+        """
         if center_x - width / 2 < 0:
             for k in range(int(width / 2 - center_x)):
                 output = np.insert(output, 0, output[0, :], axis=0)
@@ -46,7 +119,7 @@ class DataSet:
 
         return output
 
-    def generatePositive(self, dataPath, outPath):
+    def generatePositive(self, dataPath, outPath, type='train'):
         """
         Generating positive samples by adding the correct rectangle to the picutre
         Each rectangle is 1/3 padding out of the ellipse
@@ -55,7 +128,14 @@ class DataSet:
 
         """
         print(self.paths)
-        for i in range(8):
+        s = 0
+        e = 0
+        if type == 'train':
+            e = 8
+        else:
+            s = 8
+            e = 10
+        for i in range(s, e):
             file = open(self.paths[i], 'r')
             # read the image file path
             line = file.readline()
@@ -93,7 +173,7 @@ class DataSet:
                 line = file.readline()
                 name = line[:-1]
 
-    def generateNegative(self, dataPath, outPath):
+    def generateNegative(self, dataPath, outPath, type='train'):
         """
         Generating negative samples by adding the correct rectangle to the picutre
         Negative samples are generated either by:
@@ -102,7 +182,14 @@ class DataSet:
 
         """
         print(self.paths)
-        for i in range(4):
+        s = 0
+        e = 0
+        if type == 'train':
+            e = 4
+        else:
+            s = 8
+            e = 10
+        for i in range(s, e):
             file = open(self.paths[i], 'r')
             # read the image file path
             line = file.readline()
@@ -182,5 +269,8 @@ class DataSet:
 
 if __name__ == "__main__":
     d = DataSet("./FDDB-folds/")
-    # d.generatePositive("./originalPics/", "./train_pos/")
-    d.generateNegative("./originalPics/", "./train_neg/")
+    d.generatePositive("./originalPics/", "./refinedPics/train_pos/")
+    d.generateNegative("./originalPics/", "./refinedPics/train_neg/")
+    d.generatePositive("./originalPics/", "./refinedPics/test_pos/", 'test')
+    d.generateNegative("./originalPics/", "./refinedPics/test_neg/", 'test')
+    d.extractHoG()
