@@ -11,7 +11,7 @@ class MyLogisticRegression:
     My Logisitic Regression Implementation
 
     """
-    def __init__(self, regularization = 1.0, optimization = 'sgd', max_iter = 100, tolerance = 1e-5, learning_rate = 1e-3):
+    def __init__(self, regularization = 1.0, optimization = 'sgd', max_iter = 150, tolerance = 1e-5, learning_rate = 1e-3):
         """
         Initiation function
         regularization : the constant weight of regularization term
@@ -47,6 +47,7 @@ class MyLogisticRegression:
         self.loss_history = []
         loss = None
         grad = np.zeros_like(self.beta)
+        batch = 10
 
         for i in tqdm(range(self.max_iter)):
             # Currently prediction
@@ -55,27 +56,32 @@ class MyLogisticRegression:
             prediction[prediction > 0.5] = 1
             prediction[prediction < 0.5] = 0
             accuracy = np.count_nonzero(prediction == y_train) / prediction.shape[0]
-            print("Round {0}".format(i), "Accuracy : ", accuracy)
+            if (i % 20 == 0):
+                print("Round {0}".format(i), "Accuracy : ", accuracy)
 
             # Calculating Loss
+            batch-=1
             loss = np.sum(- y_train * pred)
             for Xi in X_train:
                 loss += math.log(1 + math.exp(Xi.dot(self.beta)))
             loss += np.sum(self.Lambda * self.beta * self.beta)
             self.loss_history.append(loss)
 
-            # Calculating the grad
+            # Updating beta accroding to the grad
             grad += np.transpose(X_train).dot(self.sigmoid(X_train.dot(self.beta)) - y_train)
             grad += 2 * self.Lambda * self.beta
 
-            # Updating beta accroding to the grad
-            if (self.optimizer == 'sgd'):
-                if (random.random() >= 0.3):
-                    self.beta -= self.lr * grad
-
             # Re-initialization
             loss = 0
-            grad = np.zeros_like(self.beta)
+            if (batch == 0):
+                if self.optimizer == 'sgd':
+                    self.beta -= self.lr * grad / 10
+                elif self.optimizer == 'langevin':
+                    self.beta -= (self.lr * (grad / 20) - math.sqrt(self.lr) * np.random.normal(loc = 0.0, scale=1.0, size=self.beta.shape))
+                else:
+                    raise Exception("No such mode")
+                batch = 10
+                grad = np.zeros_like(self.beta)
 
             if (1 - accuracy < self.tolerance):
                 break
