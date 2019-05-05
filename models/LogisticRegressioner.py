@@ -11,7 +11,7 @@ class MyLogisticRegression:
     My Logisitic Regression Implementation
 
     """
-    def __init__(self, regularization = 1.0, optimization = 'sgd', max_iter = 150, tolerance = 1e-5, learning_rate = 1e-3):
+    def __init__(self, regularization = 1.0, optimization = 'sgd', max_iter = 200, tolerance = 1e-5, learning_rate = 5e-4):
         """
         Initiation function
         regularization : the constant weight of regularization term
@@ -63,6 +63,7 @@ class MyLogisticRegression:
             batch-=1
             loss = np.sum(- y_train * pred)
             for Xi in X_train:
+                # print(Xi.dot(self.beta))
                 loss += math.log(1 + math.exp(Xi.dot(self.beta)))
             loss += np.sum(self.Lambda * self.beta * self.beta)
             self.loss_history.append(loss)
@@ -75,7 +76,7 @@ class MyLogisticRegression:
             loss = 0
             if (batch == 0):
                 if self.optimizer == 'sgd':
-                    self.beta -= self.lr * grad / 10
+                    self.beta -= self.lr * grad / 20
                 elif self.optimizer == 'langevin':
                     self.beta -= (self.lr * (grad / 20) - math.sqrt(self.lr) * np.random.normal(loc = 0.0, scale=1.0, size=self.beta.shape))
                 else:

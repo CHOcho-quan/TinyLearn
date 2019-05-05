@@ -12,6 +12,11 @@ def shuffle(X,Y):
     np.random.shuffle(randomList)
     return X[randomList], Y[randomList]
 
+def dataNormalize(X):
+    X -= np.mean(X)
+    X /= np.std(X)
+    return X
+
 def getData(type='train'):
     """
     Getting training or testing data from the stored pickle
