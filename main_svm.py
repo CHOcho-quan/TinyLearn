@@ -17,8 +17,10 @@ if __name__ == '__main__':
     # SVM Part
     mySVMLinearRegressioner = mySVM()
     mySVMRBFRegressioner = mySVM(kernel = 'rbf')
+    mySVMPolyRegressioner = mySVM(kernel = 'poly')
     print("My Regressioner doing SVM")
-    mySVMRBFRegressioner.fit(X_train, y_train)
+    mySVMPolyRegressioner.fit(X_train, y_train)
+    # mySVMRBFRegressioner.fit(X_train, y_train)
     # mySVMLinearRegressioner.fit(X_train, y_train)
     print("SK-Learn doing SVM")
     sklearnSVMRegressioner = sklearnSVM(X_train, y_train)
@@ -27,8 +29,9 @@ if __name__ == '__main__':
     skPred = sklearnSVMRegressioner.predict(X_test)
     skAccuracy = np.count_nonzero(skPred.reshape(skPred.shape[0], 1) == y_test) / y_test.shape[0]
     # mySVMLinearPrediction = mySVMLinearRegressioner.predict(X_test)
-    mySVMRBFPrediction = mySVMRBFRegressioner.predict(X_test)
-    print(np.count_nonzero(mySVMRBFPrediction))
+    # mySVMRBFPrediction = mySVMRBFRegressioner.predict(X_test)
+    mySVMPolyPrediction = mySVMPolyRegressioner.predict(X_test)
     # myLinearAccuracy = np.count_nonzero(mySVMLinearPrediction == y_test) / y_test.shape[0]
-    myRBFAccuracy = np.count_nonzero(mySVMRBFPrediction == y_test) / y_test.shape[0]
-    print("SK-Learn SVM Accuracy on test data: ", skAccuracy, "My SVM Accuracy: ", myRBFAccuracy)
+    # myRBFAccuracy = np.count_nonzero(mySVMRBFPrediction.reshape(mySVMRBFPrediction.shape[0], 1) == y_test) / y_test.shape[0]
+    myPolyAccuracy = np.count_nonzero(mySVMPolyPrediction.reshape(mySVMPolyPrediction.shape[0], 1) == y_test) / y_test.shape[0]
+    print("SK-Learn SVM Accuracy on test data: ", skAccuracy, "My SVM Accuracy: ", myPolyAccuracy)
