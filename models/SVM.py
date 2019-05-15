@@ -127,7 +127,7 @@ class mySVM:
         Make Predictions based on the learned w & bias
 
         """
-        pred = np.sum(np.transpose(self.alpha) * np.transpose(self.support_vector_labels) * X.dot(np.transpose(self.support_vectors)), axis=1) \
+        pred = np.sum(np.transpose(self.alpha) * np.transpose(self.support_vector_labels) * self._inner(np.transpose(X), np.transpose(self.support_vectors)), axis=1) \
                 + self.bias
         pred[pred > 0] = 1
         pred[pred <= 0] = 0

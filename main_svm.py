@@ -12,7 +12,7 @@ if __name__ == '__main__':
     X_test = X_test.reshape(X_test.shape[0], -1)
     X_train = dataNormalize(X_train)
     X_test = dataNormalize(X_test)
-    shuffle(X_train, y_train)
+    X_train, y_train = shuffle(X_train, y_train)
 
     # SVM Part
     mySVMLinearRegressioner = mySVM()
