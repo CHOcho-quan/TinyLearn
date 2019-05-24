@@ -52,7 +52,7 @@ class mySVM:
 
     def _polyKernel(self, X, Y):
         """
-        Hyperbolic Kernel calculating with matrixes or vectors X and Y
+        Polynomial Kernel calculating with matrixes or vectors X and Y
 
         """
         return (np.transpose(X).dot(Y) + 1)**2
@@ -127,8 +127,15 @@ class mySVM:
         Make Predictions based on the learned w & bias
 
         """
-        pred = np.sum(np.transpose(self.alpha) * np.transpose(self.support_vector_labels) * self._inner(np.transpose(X), np.transpose(self.support_vectors)), axis=1) \
-                + self.bias
+        pred = []
+        prediction = 0
+        for i in range(X.shape[0]):
+            for j in range(self.support_vectors.shape[0]):
+                prediction += (self.alpha[j] * self.support_vector_labels[j] * self.innerProduct(np.transpose(X[i]), np.transpose(self.support_vectors[j]))) \
+                                + self.bias
+            pred.append(prediction)
+            prediction = 0
+        pred = np.array(pred)
         pred[pred > 0] = 1
         pred[pred <= 0] = 0
         return pred

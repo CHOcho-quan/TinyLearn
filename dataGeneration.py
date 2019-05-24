@@ -14,6 +14,7 @@ class DataSet:
     def __init__(self, filepath):
         self.filepath = filepath
         self.paths = glob.glob(pathname=filepath+"FDDB-fold-**-ellipseList.txt")
+        self.paths = sorted(self.paths)
 
     def HoG(self, img):
         """
@@ -45,36 +46,44 @@ class DataSet:
         imagesTestNeg = glob.glob(pathname="./refinedPics/test_neg/*.jpg")
         X_train = []
         y_train = []
+        train_name = []
         X_test = []
         y_test = []
+        test_name = []
         for imgPath in imagesTrainPos:
             img = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
             feats = self.HoG(img)
             X_train.append(feats)
+            train_name.append(imgPath)
             y_train.append([1])
 
         for imgPath in imagesTrainNeg:
             img = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
             feats = self.HoG(img)
             X_train.append(feats)
+            train_name.append(imgPath)
             y_train.append([0])
 
         for imgPath in imagesTestPos:
             img = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
             feats = self.HoG(img)
             X_test.append(feats)
+            test_name.append(imgPath)
             y_test.append([1])
 
         for imgPath in imagesTestNeg:
             img = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
             feats = self.HoG(img)
             X_test.append(feats)
+            test_name.append(imgPath)
             y_test.append([0])
 
         with open('./data/train.pickle', 'wb') as f:
             pickle.dump((np.array(X_train), np.array(y_train)), f)
         with open('./data/test.pickle', 'wb') as f:
             pickle.dump((np.array(X_test), np.array(y_test)), f)
+        with open('./data/name.pickle', 'wb') as f:
+            pickle.dump((train_name, test_name), f)
 
         # with open('data.pickle', 'rb') as f:
         #     b = pickle.load(f)
@@ -187,7 +196,7 @@ class DataSet:
         if type == 'train':
             e = 4
         else:
-            s = 8
+            s = 9
             e = 10
         for i in range(s, e):
             file = open(self.paths[i], 'r')
@@ -206,8 +215,8 @@ class DataSet:
                     long, short, angle, center_x, center_y = line[:5]
 
                     # Calculating the points and getting the rectangle on the image
-                    width = float(short) * 8 / 3
-                    height = float(long) * 8 / 3
+                    width = float(short) * 2
+                    height = float(long) * 2
                     center_x = float(center_x)
                     center_y = float(center_y)
 

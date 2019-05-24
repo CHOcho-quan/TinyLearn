@@ -15,9 +15,9 @@ if __name__ == '__main__':
     X_train, y_train = shuffle(X_train, y_train)
 
     # SVM Part
-    mySVMLinearRegressioner = mySVM()
-    mySVMRBFRegressioner = mySVM(kernel = 'rbf')
-    mySVMPolyRegressioner = mySVM(kernel = 'poly')
+    # mySVMLinearRegressioner = mySVM()
+    # mySVMRBFRegressioner = mySVM(kernel = 'rbf')
+    mySVMPolyRegressioner = mySVM(kernel = 'rbf')
     print("My Regressioner doing SVM")
     mySVMPolyRegressioner.fit(X_train, y_train)
     # mySVMRBFRegressioner.fit(X_train, y_train)
