@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
 import cv2
+import matplotlib.pyplot as plt
 
 def splitData(X, y, rate):
     """
