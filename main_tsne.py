@@ -48,9 +48,9 @@ if __name__=='__main__':
     print(X.shape, y.shape)
 
     # We first reorder the data points according to the handwritten numbers.
-    digits_proj = TSNE(random_state=RS).fit_transform(X)
+    face = TSNE(random_state=RS).fit_transform(X)
     print("T-SNE finished")
 
-    scatter(digits_proj, y)
+    scatter(face, y)
     plt.savefig('tsne-generated.png', dpi=120)
     plt.show()

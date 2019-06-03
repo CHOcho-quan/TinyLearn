@@ -52,6 +52,8 @@ class DataSet:
         test_name = []
         for imgPath in imagesTrainPos:
             img = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
+            # cv2.imshow("img", img)
+            # cv2.waitKey(0)
             feats = self.HoG(img)
             X_train.append(feats)
             train_name.append(imgPath)

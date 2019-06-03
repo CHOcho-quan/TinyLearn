@@ -55,7 +55,7 @@ class Solver(object):
 
         """
         if config is None: config = {}
-        config.setdefault('learning_rate', 1e-3)
+        config.setdefault('learning_rate', 1e-5)
         config.setdefault('beta1', 0.9)
         config.setdefault('beta2', 0.999)
         config.setdefault('epsilon', 1e-8)
