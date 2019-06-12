@@ -2,6 +2,10 @@ import numpy as np
 import cv2
 import glob
 import pickle
+import matplotlib.pyplot as plt
+
+from skimage import io
+from skimage.feature import hog
 
 class DataSet:
     """
@@ -168,18 +172,25 @@ class DataSet:
                     center_x = float(center_x)
                     center_y = float(center_y)
 
-                    # image = cv2.rectangle(image, pt1=(int(center_x - width / 2), int(center_y - height / 2)), pt2=(int(center_x + width / 2), int(center_y + height / 2)), color=(0,0,255))
+                    image = cv2.rectangle(image, pt1=(int(center_x - width / 2), int(center_y - height / 2)), pt2=(int(center_x + width / 2), int(center_y + height / 2)), thickness=5, color=(255,0,0))
 
                     # Now deal with the situation when the rectangle is outside the image
                     output = image[max(int(center_y - height / 2), 0):min(int(center_y + height / 2), image.shape[0]),
                                    max(0, int(center_x - width / 2)):min(int(center_x + width / 2), image.shape[1])]
                     output = self.paddingNormal(image, output, center_x, center_y, height, width)
-                    # cv2.imshow("output", output)
+                    output = cv2.resize(output, dsize=(96, 96))
+
+                    # Visualize HoG Feature by skimage
+                    # normalised_blocks, hog_image = hog(output, orientations=9, pixels_per_cell=(16, 16), cells_per_block=(2, 2), visualise=True)
+                    # plt.imshow(image, cmap=plt.cm.gray)
+                    # plt.show()
+
+                    # cv2.imshow("img", image)
                     # cv2.waitKey(0)
 
                     # Now the output is the faces.
                     # print(outPath + name.split('/').join('') + str(j) + ".jpg")
-                    cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + ".jpg", cv2.resize(output, dsize=(96, 96)))
+                    cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + ".jpg", output)
 
                 line = file.readline()
                 name = line[:-1]
@@ -274,6 +285,13 @@ class DataSet:
                                     max(0, int(center_x - width / 6), 0):min(int(center_x + width * 5 / 6), image.shape[1])]
                     output8 = self.padding(image, output8, left_padding=int(center_x - width / 6), right_padding=int(center_x + width * 5 / 6), up_padding=int(center_y - height / 6), down_padding=int(center_y + height * 5 / 6))
                     cv2.imwrite(outPath + '_'.join(name.split('/')) + "_" + str(j) + "_" + str(8) + ".jpg", cv2.resize(output8, (96, 96)))
+
+                    cv2.imshow("a", cv2.resize(image, (96, 96)))
+                    cv2.imshow("neg", output2)
+
+                    normalised_blocks, hog_image = hog(cv2.resize(output2, (96, 96)), orientations=9, pixels_per_cell=(16, 16), cells_per_block=(2, 2), visualise=True)
+                    plt.imshow(hog_image, cmap=plt.cm.gray)
+                    plt.show()
 
                 line = file.readline()
                 name = line[:-1]

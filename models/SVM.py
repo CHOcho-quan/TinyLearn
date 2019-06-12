@@ -140,7 +140,7 @@ class mySVM:
         pred[pred <= 0] = 0
         return pred
 
-def sklearnSVM(X_train, y_train, C = 1.0, max_iter = 100):
+def sklearnSVM(X_train, y_train, C = 1.0, max_iter = 500):
     """
     SKLearn SVM to be tested with MySVM results
     C : The penalty term of SVM
