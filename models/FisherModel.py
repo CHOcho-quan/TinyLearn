@@ -37,7 +37,7 @@ class MyFisherModel:
 
         # Now the beta is the eigenvalue of the matrix Sw-1Sb
         self.beta = np.linalg.inv(Sw).dot(np.transpose(mu1 - mu0))
-        print("Intra class variance is", ((mu1 - mu0).dot(self.beta))**2, "inter class variance is", \
+        print("Inter class variance is", ((mu1 - mu0).dot(self.beta))**2, "intra class variance is", \
                 np.transpose(self.beta).dot(sigma1).dot(self.beta) + np.transpose(self.beta).dot(sigma0).dot(self.beta))
         self.threshold = (mu0.dot(self.beta) + mu1.dot(self.beta)) / 2
         # print(mu0.dot(self.beta) > self.threshold)

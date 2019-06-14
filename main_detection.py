@@ -59,7 +59,7 @@ def detectSingleScale(img, l, stride, model):
             if pred >= 0.5:
                 rects.append([i, i+l, j, j+l])
 
-    rects = NMS(rects, l)
+    # rects = NMS(rects, l)
     for rect in rects:
         x1, x2, y1, y2 = rect
         img = cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255))

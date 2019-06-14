@@ -30,6 +30,8 @@ class MyConvNet(object):
         self.params['b1'] = np.zeros(num_filters)
         self.params['W2'] = weight_scale * np.random.randn(int((H / 2)*(W / 2)*num_filters), hidden_dim)
         self.params['b2'] = np.zeros(hidden_dim)
+        self.params['gamma'] = np.zeros(hidden_dim)
+        self.params['beta'] = np.zeros(hidden_dim)
         self.params['W3'] = weight_scale * np.random.randn(hidden_dim, num_classes)
         self.params['b3'] = np.zeros(num_classes)
 
@@ -207,6 +209,68 @@ class MyConvNet(object):
         cache = (conv_cache, relu_cache, pool_cache)
         return out, cache
 
+    def batchnorm_forward(self, x, gamma, beta, bn_param):
+        """
+        Forward pass for batch normalization.
+
+
+        """
+        mode = bn_param['mode']
+        eps = bn_param.get('eps', 1e-5)
+        momentum = bn_param.get('momentum', 0.9)
+
+        N, D = x.shape
+        running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
+        running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
+
+        out, cache = None, None
+        if mode == 'train':
+            sample_mean = np.mean(x, axis = 0)
+            sample_var = np.var(x , axis = 0)
+            x_hat = (x - sample_mean) / (np.sqrt(sample_var  + eps))
+            out = gamma * x_hat + beta
+            cache = (gamma, x, sample_mean, sample_var, eps, x_hat)
+            running_mean = momentum * running_mean + (1 - momentum) * sample_mean
+            running_var = momentum * running_var + (1 - momentum) * sample_var
+        elif mode == 'test':
+            scale = gamma / (np.sqrt(running_var  + eps))
+            out = x * scale + (beta - running_mean * scale)
+        else:
+            raise ValueError('Invalid forward batchnorm mode "%s"' % mode)
+
+        # Store the updated running means back into bn_param
+        bn_param['running_mean'] = running_mean
+        bn_param['running_var'] = running_var
+
+        return out, cache
+
+    def batchnorm_backward(self, dout, cache):
+        """
+        Backward pass for batch normalization.
+
+        """
+        dx, dgamma, dbeta = None, None, None
+        gamma, x, u_b, sigma_squared_b, eps, x_hat = cache
+        N = x.shape[0]
+
+        dx_1 = gamma * dout
+        dx_2_b = np.sum((x - u_b) * dx_1, axis=0)
+        dx_2_a = ((sigma_squared_b + eps) ** -0.5) * dx_1
+        dx_3_b = (-0.5) * ((sigma_squared_b + eps) ** -1.5) * dx_2_b
+        dx_4_b = dx_3_b * 1
+        dx_5_b = np.ones_like(x) / N * dx_4_b
+        dx_6_b = 2 * (x - u_b) * dx_5_b
+        dx_7_a = dx_6_b * 1 + dx_2_a * 1
+        dx_7_b = dx_6_b * 1 + dx_2_a * 1
+        dx_8_b = -1 * np.sum(dx_7_b, axis=0)
+        dx_9_b = np.ones_like(x) / N * dx_8_b
+        dx_10 = dx_9_b + dx_7_a
+
+        dgamma = np.sum(x_hat * dout, axis=0)
+        dbeta = np.sum(dout, axis=0)
+        dx = dx_10
+
+        return dx, dgamma, dbeta
 
     def conv_relu_pool_backward(self, dout, cache):
         """
@@ -255,7 +319,8 @@ class MyConvNet(object):
         conv_forward_out_1, cache_forward_1 = self.conv_relu_pool_forward(X, self.params['W1'], self.params['b1'], conv_param, pool_param)
         fc_forward_out_2, cache_forward_2 = self.fc_forward(conv_forward_out_1, self.params['W2'], self.params['b2'])
         fc_relu_2, cache_relu_2 = self.relu_forward(fc_forward_out_2)
-        scores, cache_forward_3 = self.fc_forward(fc_relu_2, self.params['W3'], self.params['b3'])
+        bn_3, cache_bn_3 = self.batchnorm_forward(fc_relu_2, self.params['gamma'], self.params['beta'], {'mode':'train'})
+        scores, cache_forward_3 = self.fc_forward(bn_3, self.params['W3'], self.params['b3'])
 
         if y is None:
             return scores
@@ -266,7 +331,8 @@ class MyConvNet(object):
         # Add regularization
         loss += self.reg * 0.5 * (np.sum(self.params['W1'] ** 2) + np.sum(self.params['W2'] ** 2) + np.sum(self.params['W3'] ** 2))
 
-        dX3, grads['W3'], grads['b3'] = self.fc_backward(dout, cache_forward_3)
+        dX4, grads['W3'], grads['b3'] = self.fc_backward(dout, cache_forward_3)
+        dX3, grads['gamma'], grads['beta'] = self.batchnorm_backward(dX4, cache_bn_3)
         dX2 = self.relu_backward(dX3, cache_relu_2)
         dX2, grads['W2'], grads['b2'] = self.fc_backward(dX2, cache_forward_2)
         dX1, grads['W1'], grads['b1'] = self.conv_relu_pool_backward(dX2, cache_forward_1)

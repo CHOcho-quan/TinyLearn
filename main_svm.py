@@ -12,7 +12,11 @@ if __name__ == '__main__':
     X_test = X_test.reshape(X_test.shape[0], -1)
     X_train = dataNormalize(X_train)
     X_test = dataNormalize(X_test)
-    X_train, y_train = shuffle(X_train, y_train)
+
+    with open('./data/name.pickle', 'rb') as f:
+        train_name, test_name = pickle.load(f)
+    # X_train, y_train = shuffle(X_train, y_train, train_name)
+
 
     # SVM Part
     # mySVMLinearRegressioner = mySVM()
@@ -23,7 +27,11 @@ if __name__ == '__main__':
     # mySVMRBFRegressioner.fit(X_train, y_train)
     # mySVMLinearRegressioner.fit(X_train, y_train)
     print("SK-Learn doing SVM")
-    sklearnSVMRegressioner = sklearnSVM(X_train, y_train)
+    sklearnSVMRegressioner = sklearnSVM(X_train, y_train, kernel='rbf')
+    print(len(sklearnSVMRegressioner.support_))
+    for i in sklearnSVMRegressioner.support_:
+        cv2.imshow("a", cv2.imread(train_name[i]))
+        cv2.waitKey(0)
 
     # Predictions
     skPred = sklearnSVMRegressioner.predict(X_test)

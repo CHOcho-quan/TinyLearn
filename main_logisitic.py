@@ -2,6 +2,7 @@ from utils import *
 import numpy as np
 import pickle
 import cv2
+import matplotlib.pyplot as plt
 from models.LogisticRegressioner import MyLogisticRegression, SKLearnLogisticRegression
 
 if __name__ == '__main__':
@@ -20,6 +21,10 @@ if __name__ == '__main__':
     print("My Regressioner doing Logisitic Regression")
     mySGDRegressioner.fit(X_train, y_train)
     myLangevinRegressioner.fit(X_train, y_train)
+    plt.plot(range(len(mySGDRegressioner.loss_history)), mySGDRegressioner.loss_history, label='SGD')
+    plt.plot(range(len(myLangevinRegressioner.loss_history)), myLangevinRegressioner.loss_history, label='Langevin')
+    plt.legend()
+    plt.show()
     print("SK-Learn doing Logisitic Regression")
     sklearnRegressioner = SKLearnLogisticRegression(1, 100, X_train, y_train)
 

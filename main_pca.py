@@ -1,6 +1,6 @@
 import numpy as np
 import sklearn
-from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as PathEffects
 import matplotlib
@@ -36,20 +36,17 @@ def scatter(x, colors):
 
     return f, ax, sc, txts
 
-if __name__=='__main__':
-    sns.set_style('darkgrid')
-    sns.set_palette('muted')
-    sns.set_context("notebook", font_scale=1.5,
-                rc={"lines.linewidth": 2.5})
-    X, y = getData()
-    X = X.reshape(X.shape[0], -1)
-    y = y.reshape(1, -1)[0]
-    print(X.shape, y.shape)
+pca = PCA(n_components=2)
+X, y = getData()
+X = X.reshape(X.shape[0], -1)
+y = y.reshape(1, -1)[0]
 
-    # We first reorder the data points according to the handwritten numbers.
-    face = TSNE(random_state=RS).fit_transform(X)
-    print("t-SNE finished")
+face = pca.fit_transform(X)
+sns.set_style('darkgrid')
+sns.set_palette('muted')
+sns.set_context("notebook", font_scale=1.5,
+            rc={"lines.linewidth": 2.5})
 
-    scatter(face, y)
-    plt.savefig('tsne-generated.png', dpi=120)
-    plt.show()
+scatter(face, y)
+plt.savefig('pca-generated.png', dpi=120)
+plt.show()

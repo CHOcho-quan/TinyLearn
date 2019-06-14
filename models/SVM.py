@@ -140,12 +140,12 @@ class mySVM:
         pred[pred <= 0] = 0
         return pred
 
-def sklearnSVM(X_train, y_train, C = 1.0, max_iter = 500):
+def sklearnSVM(X_train, y_train, C = 1.0, max_iter = 2000, kernel='rbf'):
     """
     SKLearn SVM to be tested with MySVM results
     C : The penalty term of SVM
     max_iter : Max hard iteration of the SVM
 
     """
-    clf = SVC(C=C, max_iter=max_iter).fit(X_train, y_train)
+    clf = SVC(C=C, kernel=kernel, max_iter=max_iter).fit(X_train, y_train)
     return clf
