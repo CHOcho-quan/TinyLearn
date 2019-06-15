@@ -11,7 +11,7 @@ class MyLogisticRegression:
     My Logisitic Regression Implementation
 
     """
-    def __init__(self, regularization = 1.0, optimization = 'sgd', max_iter = 150, tolerance = 1e-5, learning_rate = 5e-4):
+    def __init__(self, regularization = 1.0, optimization = 'sgd', max_iter = 500, tolerance = 1e-5, learning_rate = 5e-4):
         """
         Initiation function
         regularization : the constant weight of regularization term
@@ -47,7 +47,7 @@ class MyLogisticRegression:
         self.loss_history = []
         loss = None
         grad = np.zeros_like(self.beta)
-        batch = 10
+        batch_size = 100
 
         for i in tqdm(range(self.max_iter)):
             # Currently prediction
@@ -60,9 +60,10 @@ class MyLogisticRegression:
                 print("Round {0}".format(i), "Accuracy : ", accuracy)
 
             # Calculating Loss
-            batch-=1
-            loss = np.sum(- y_train * pred)
-            for Xi in X_train:
+            batch = np.random.randint(0, X_train.shape[0], batch_size)
+            # print(batch)
+            loss = np.sum(- y_train[batch] * pred[batch])
+            for Xi in X_train[batch]:
                 # print(Xi.dot(self.beta))
                 loss += math.log(1 + math.exp(Xi.dot(self.beta)))
             loss += np.sum(self.Lambda * self.beta * self.beta)
@@ -74,15 +75,13 @@ class MyLogisticRegression:
 
             # Re-initialization
             loss = 0
-            if (batch == 0):
-                if self.optimizer == 'sgd':
-                    self.beta -= self.lr * grad / 20
-                elif self.optimizer == 'langevin':
-                    self.beta -= (self.lr * (grad / 20) - math.sqrt(self.lr) * np.random.normal(loc = 0.0, scale=1.0, size=self.beta.shape))
-                else:
-                    raise Exception("No such mode")
-                batch = 10
-                grad = np.zeros_like(self.beta)
+            if self.optimizer == 'sgd':
+                self.beta -= self.lr * grad / 20
+            elif self.optimizer == 'langevin':
+                self.beta -= (self.lr * grad / 20 - math.sqrt(self.lr) * np.random.normal(loc = 0.0, scale=1.0, size=self.beta.shape))
+            else:
+                raise Exception("No such mode")
+            grad = np.zeros_like(self.beta)
 
             if (1 - accuracy < self.tolerance):
                 break
