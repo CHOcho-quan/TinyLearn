@@ -11,7 +11,7 @@ class MyLogisticRegression:
     My Logisitic Regression Implementation
 
     """
-    def __init__(self, regularization = 1.0, optimization = 'sgd', max_iter = 500, tolerance = 1e-5, learning_rate = 5e-4):
+    def __init__(self, regularization = 1.0, optimization = 'sgd', max_iter = 250, tolerance = 1e-5, learning_rate = 5e-4):
         """
         Initiation function
         regularization : the constant weight of regularization term
