@@ -1,5 +1,5 @@
 # TinyLearn
-CS385 Project1, implementing Logistic Regression, SVM, fisher model and CNN by numpy. Also includes some visualization techniques such as PCA & t-SNE and detection part. 
+CS385 Project1, instructed by Prof. Quanshi Zhang and Dr. Xu Cheng, implementing Logistic Regression, SVM, fisher model and CNN by numpy. Also includes some visualization techniques such as PCA & t-SNE and detection part. 
 
 Dataset can be download from [FDDB](http://vis-www.cs.umass.edu/fddb/). Please put the dataset in the TinyLearn folder and run the following command.
 
