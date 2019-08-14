@@ -1,0 +1,4 @@
+/Applications/CLion.app/Contents/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /Users/quan/Desktop/2019-semester/2/MachineLearning/QSProject1-Cpp
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/quan/Desktop/2019-semester/2/MachineLearning/QSProject1-Cpp/cmake-build-debug
