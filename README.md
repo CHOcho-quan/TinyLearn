@@ -15,4 +15,6 @@ python3 main_cnn.py
 
 t-SNE and PCA are used to visualize the HoG features of the data. If you want to see the visualize result in tensorboard, please run the tensorboard_gen.py. All the implementing details are described in the report. To run detection result please run main_detection.py.
 
+Also I add Cpp part of Machine Learning Algorithm implementation in it with a CMakeLists.txt. You can make it and run main.cpp to get the Cpp version result. Eigen should be placed in the directory written in CMakeLists.txt. Cpp version convolutional neural network will be added soon.
+
 ![detections!](detection3.png)
